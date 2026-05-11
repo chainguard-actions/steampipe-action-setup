@@ -1,0 +1,33 @@
+name: Test specific steampipe version install
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          steampipe-version: 0.20.8
+      - name: Assert steampipe-version output matches requested version
+        env:
+          ACTUAL: ${{ steps.action.outputs.steampipe-version }}
+        run: |
+          echo "actual steampipe-version: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: steampipe-version output is empty"
+            exit 1
+          fi
+          if [[ "$ACTUAL" != *"0.20.8"* ]]; then
+            echo "FAIL: expected version to contain '0.20.8', got '$ACTUAL'"
+            exit 1
+          fi
+          echo "PASS: steampipe-version=$ACTUAL"
+      - name: Assert steampipe is on PATH
+        run: |
+          if ! command -v steampipe &>/dev/null; then
+            echo "FAIL: steampipe not found on PATH"
+            exit 1
+          fi
+          echo "PASS: steampipe found at $(command -v steampipe)"
