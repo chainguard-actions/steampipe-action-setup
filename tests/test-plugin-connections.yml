@@ -1,0 +1,33 @@
+name: Test Steampipe setup with plugin-connections
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          steampipe-version: latest
+          plugin-connections: |
+            connection "chaos" {
+              plugin = "chaos"
+            }
+      - name: Assert steampipe-version output is non-empty
+        env:
+          ACTUAL: ${{ steps.action.outputs.steampipe-version }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: steampipe-version output was empty"
+            exit 1
+          fi
+          echo "PASS: steampipe-version=$ACTUAL"
+      - name: Assert steampipe binary is on PATH
+        run: |
+          if ! command -v steampipe &>/dev/null; then
+            echo "FAIL: steampipe not found on PATH"
+            exit 1
+          fi
+          echo "PASS: steampipe found at $(command -v steampipe)"
